@@ -232,11 +232,11 @@ chaincodeInvoke() {
         -C $CHANNEL_NAME -n ${CC_NAME}  \
         --peerAddresses localhost:7051 --tlsRootCertFiles $PEER0_ORG1_CA \
         --peerAddresses localhost:9051 --tlsRootCertFiles $PEER0_ORG2_CA   \
-        -c '{"function": "createCar","Args":["{\"id\":\"1\",\"make\":\"Audi\",\"addedAt\":1600138309939,\"model\":\"R8\", \"color\":\"red\",\"owner\":\"pavan\"}"]}'
+        -c '{"function": "CreatePatient","Args":["{\"id\":\"10\",\"fhir_id\":\"fifty1\",\"hospitals_id\":\"11\",\"insurance_id\":\"11\",\"name\":\"siddharth\"}"]}'
 
 }
 
-# chaincodeInvoke
+ chaincodeInvoke
 
 chaincodeInvokeDeleteAsset() {
     setGlobalsForPeer0Org1
@@ -258,27 +258,29 @@ chaincodeInvokeDeleteAsset() {
 chaincodeQuery() {
     setGlobalsForPeer0Org1
     # setGlobalsForOrg1
-    peer chaincode query -C $CHANNEL_NAME -n ${CC_NAME} -c '{"function": "GetCarById","Args":["1"]}'
+    peer chaincode query -C $CHANNEL_NAME -n ${CC_NAME} -c '{"function": "GetDataById","Args":["1"]}'
 }
 
-# chaincodeQuery
+ #chaincodeQuery
+
+
 
 # Run this function if you add any new dependency in chaincode
-presetup
+ presetup
 
-packageChaincode
-installChaincode
-queryInstalled
+ packageChaincode
+ installChaincode
+ queryInstalled
 approveForMyOrg1
-checkCommitReadyness
-approveForMyOrg2
-checkCommitReadyness
-approveForMyOrg3
-checkCommitReadyness
-commitChaincodeDefination
-queryCommitted
+ checkCommitReadyness
+ approveForMyOrg2
+ checkCommitReadyness
+ approveForMyOrg3
+ checkCommitReadyness
+ commitChaincodeDefination
+ queryCommitted
 chaincodeInvokeInit
-sleep 5
-chaincodeInvoke
-sleep 3
-chaincodeQuery
+ sleep 5
+#chaincodeInvoke
+# sleep 3
+# chaincodeQuery

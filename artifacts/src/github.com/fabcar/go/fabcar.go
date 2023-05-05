@@ -1,13 +1,13 @@
 package main
 
 import (
-	"bytes"
+	//"bytes"
 	"encoding/json"
 	"fmt"
 	"strconv"
-	"time"
+	//"time"
 
-	"github.com/hyperledger/fabric-chaincode-go/pkg/cid"
+	//"github.com/hyperledger/fabric-chaincode-go/pkg/cid"
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
 	"github.com/hyperledger/fabric/common/flogging"
 )
@@ -18,274 +18,199 @@ type SmartContract struct {
 
 var logger = flogging.MustGetLogger("fabcar_cc")
 
-type Car struct {
-	ID      string `json:"id"`
-	Make    string `json:"make"`
-	Model   string `json:"model"`
-	Color   string `json:"color"`
-	Owner   string `json:"owner"`
-	AddedAt uint64 `json:"addedAt"`
+type Patient struct {
+	ID          string `json:"Id"`
+	FHIRID      string `json:"fhir_id"`
+	HospitalsID string `json:"hospitals_id"`
+	InsuranceID string `json:"insurance_id"`
 }
 
-func (s *SmartContract) CreateCar(ctx contractapi.TransactionContextInterface, carData string) (string, error) {
+type Hospital struct {
+	FHIRID string `json:"fhir_id"`
+}
 
-	if len(carData) == 0 {
+type Claim struct {
+	FHIRID     string    `json:"fhir_id"`
+	HospitalID string    `json:"hospital_id"`
+	PatientID  string    `json:"patient_id"`
+	InsurerID  string    `json:"insurer_id"`
+	Status     bool   `json:"status"`
+}
+
+func (s *SmartContract) CreatePatient(ctx contractapi.TransactionContextInterface, patientData string) (string, error) {
+
+	if len(patientData) == 0 {
 		return "", fmt.Errorf("Please pass the correct car data")
 	}
 
-	var car Car
-	err := json.Unmarshal([]byte(carData), &car)
+	var patient Patient
+	err := json.Unmarshal([]byte(patientData), &patient)
 	if err != nil {
 		return "", fmt.Errorf("Failed while unmarshling car. %s", err.Error())
 	}
 
-	carAsBytes, err := json.Marshal(car)
+	patientBytes, err := json.Marshal(patient)
 	if err != nil {
 		return "", fmt.Errorf("Failed while marshling car. %s", err.Error())
 	}
 
-	ctx.GetStub().SetEvent("CreateAsset", carAsBytes)
+	ctx.GetStub().SetEvent("CreateAsset", patientBytes)
 
-	return ctx.GetStub().GetTxID(), ctx.GetStub().PutState(car.ID, carAsBytes)
+	return ctx.GetStub().GetTxID(), ctx.GetStub().PutState(patient.ID, patientBytes)
 }
 
-func (s *SmartContract) ABACTest(ctx contractapi.TransactionContextInterface, carData string) (string, error) {
+func (s *SmartContract) CreateHospital(ctx contractapi.TransactionContextInterface, hospitalData string) (string, error) {
 
-	mspId, err := cid.GetMSPID(ctx.GetStub())
-	if err != nil {
-		return "", fmt.Errorf("failed while getting identity. %s", err.Error())
-	}
-	if mspId != "Org2MSP" {
-		return "", fmt.Errorf("You are not authorized to create Car Data")
-	}
-
-	if len(carData) == 0 {
+	if len(hospitalData) == 0 {
 		return "", fmt.Errorf("Please pass the correct car data")
 	}
 
-	var car Car
-	err = json.Unmarshal([]byte(carData), &car)
+	var hospital Hospital
+	err := json.Unmarshal([]byte(hospitalData), &hospital)
 	if err != nil {
 		return "", fmt.Errorf("Failed while unmarshling car. %s", err.Error())
 	}
 
-	carAsBytes, err := json.Marshal(car)
+	hospitalBytes, err := json.Marshal(hospital)
 	if err != nil {
 		return "", fmt.Errorf("Failed while marshling car. %s", err.Error())
 	}
 
-	ctx.GetStub().SetEvent("CreateAsset", carAsBytes)
-
-	return ctx.GetStub().GetTxID(), ctx.GetStub().PutState(car.ID, carAsBytes)
+	ctx.GetStub().SetEvent("CreateAsset", hospitalBytes)
+	id := "hospital/"+ hospital.FHIRID
+	return ctx.GetStub().GetTxID(), ctx.GetStub().PutState(id, hospitalBytes)
 }
 
-func (s *SmartContract) CreatePrivateDataImplicitForOrg1(ctx contractapi.TransactionContextInterface, carData string) (string, error) {
+func (s *SmartContract) CreateClaim(ctx contractapi.TransactionContextInterface, claimData string) (string, error) {
 
-	if len(carData) == 0 {
-		return "", fmt.Errorf("please pass the correct document data")
+	if len(claimData) == 0 {
+		return "", fmt.Errorf("Please pass the correct car data")
 	}
 
-	var car Car
-	err := json.Unmarshal([]byte(carData), &car)
+	var claim Claim
+	err := json.Unmarshal([]byte(claimData), &claim)
 	if err != nil {
-		return "", fmt.Errorf("failed while un-marshalling document. %s", err.Error())
+		return "", fmt.Errorf("Failed while unmarshling car. %s", err.Error())
 	}
 
-	carAsBytes, err := json.Marshal(car)
-	if err != nil {
-		return "", fmt.Errorf("failed while marshalling car. %s", err.Error())
-	}
-
-	return ctx.GetStub().GetTxID(), ctx.GetStub().PutPrivateData("_implicit_org_Org1MSP", car.ID, carAsBytes)
-}
-
-//
-func (s *SmartContract) UpdateCarOwner(ctx contractapi.TransactionContextInterface, carID string, newOwner string) (string, error) {
-
-	if len(carID) == 0 {
-		return "", fmt.Errorf("Please pass the correct car id")
-	}
-
-	carAsBytes, err := ctx.GetStub().GetState(carID)
-
-	if err != nil {
-		return "", fmt.Errorf("Failed to get car data. %s", err.Error())
-	}
-
-	if carAsBytes == nil {
-		return "", fmt.Errorf("%s does not exist", carID)
-	}
-
-	car := new(Car)
-	_ = json.Unmarshal(carAsBytes, car)
-
-	car.Owner = newOwner
-
-	carAsBytes, err = json.Marshal(car)
+	claimBytes, err := json.Marshal(claim)
 	if err != nil {
 		return "", fmt.Errorf("Failed while marshling car. %s", err.Error())
 	}
 
-	//  txId := ctx.GetStub().GetTxID()
-
-	return ctx.GetStub().GetTxID(), ctx.GetStub().PutState(car.ID, carAsBytes)
-
+	ctx.GetStub().SetEvent("CreateAsset", claimBytes)
+	id := "claim/"+ claim.FHIRID
+	return ctx.GetStub().GetTxID(), ctx.GetStub().PutState(id, claimBytes)
 }
-
-func (s *SmartContract) GetHistoryForAsset(ctx contractapi.TransactionContextInterface, carID string) (string, error) {
-
-	resultsIterator, err := ctx.GetStub().GetHistoryForKey(carID)
-	if err != nil {
-		return "", fmt.Errorf(err.Error())
-	}
-	defer resultsIterator.Close()
-
-	var buffer bytes.Buffer
-	buffer.WriteString("[")
-
-	bArrayMemberAlreadyWritten := false
-	for resultsIterator.HasNext() {
-		response, err := resultsIterator.Next()
-		if err != nil {
-			return "", fmt.Errorf(err.Error())
-		}
-		if bArrayMemberAlreadyWritten == true {
-			buffer.WriteString(",")
-		}
-		buffer.WriteString("{\"TxId\":")
-		buffer.WriteString("\"")
-		buffer.WriteString(response.TxId)
-		buffer.WriteString("\"")
-
-		buffer.WriteString(", \"Value\":")
-		if response.IsDelete {
-			buffer.WriteString("null")
-		} else {
-			buffer.WriteString(string(response.Value))
-		}
-
-		buffer.WriteString(", \"Timestamp\":")
-		buffer.WriteString("\"")
-		buffer.WriteString(time.Unix(response.Timestamp.Seconds, int64(response.Timestamp.Nanos)).String())
-		buffer.WriteString("\"")
-
-		buffer.WriteString(", \"IsDelete\":")
-		buffer.WriteString("\"")
-		buffer.WriteString(strconv.FormatBool(response.IsDelete))
-		buffer.WriteString("\"")
-
-		buffer.WriteString("}")
-		bArrayMemberAlreadyWritten = true
-	}
-	buffer.WriteString("]")
-
-	return string(buffer.Bytes()), nil
-}
-
-func (s *SmartContract) GetCarById(ctx contractapi.TransactionContextInterface, carID string) (*Car, error) {
+func (s *SmartContract) GetDataById(ctx contractapi.TransactionContextInterface, carID string) (*Patient, error) {
 	if len(carID) == 0 {
 		return nil, fmt.Errorf("Please provide correct contract Id")
 		// return shim.Error("Incorrect number of arguments. Expecting 1")
 	}
 
-	carAsBytes, err := ctx.GetStub().GetState(carID)
+	patientAsBytes, err := ctx.GetStub().GetState(carID)
 
 	if err != nil {
 		return nil, fmt.Errorf("Failed to read from world state. %s", err.Error())
 	}
 
-	if carAsBytes == nil {
+	if patientAsBytes == nil {
 		return nil, fmt.Errorf("%s does not exist", carID)
 	}
 
-	car := new(Car)
-	_ = json.Unmarshal(carAsBytes, car)
+	patient := new(Patient)
+	_ = json.Unmarshal(patientAsBytes, patient)
 
-	return car, nil
+	return patient, nil
 
 }
-
-func (s *SmartContract) DeleteCarById(ctx contractapi.TransactionContextInterface, carID string) (string, error) {
-	if len(carID) == 0 {
-		return "", fmt.Errorf("Please provide correct contract Id")
+func (s *SmartContract) GethospitalDataById(ctx contractapi.TransactionContextInterface, hospitalId string) (*Hospital, error) {
+	if len(hospitalId) == 0 {
+		return nil, fmt.Errorf("Please provide correct contract Id")
+		// return shim.Error("Incorrect number of arguments. Expecting 1")
 	}
 
-	return ctx.GetStub().GetTxID(), ctx.GetStub().DelState(carID)
-}
-
-func (s *SmartContract) GetContractsForQuery(ctx contractapi.TransactionContextInterface, queryString string) ([]Car, error) {
-
-	queryResults, err := s.getQueryResultForQueryString(ctx, queryString)
+	hospitalBytes, err := ctx.GetStub().GetState(hospitalId)
 
 	if err != nil {
-		return nil, fmt.Errorf("Failed to read from ----world state. %s", err.Error())
+		return nil, fmt.Errorf("Failed to read from world state. %s", err.Error())
 	}
 
-	return queryResults, nil
+	if hospitalBytes == nil {
+		return nil, fmt.Errorf("%s does not exist", hospitalId)
+	}
+
+	hospital := new(Hospital)
+	_ = json.Unmarshal(hospitalBytes, hospital)
+
+	return hospital, nil
 
 }
 
-func (s *SmartContract) getQueryResultForQueryString(ctx contractapi.TransactionContextInterface, queryString string) ([]Car, error) {
+func (s *SmartContract) GetclaimDataById(ctx contractapi.TransactionContextInterface, claimId string) (*Claim, error) {
+	if len(claimId) == 0 {
+		return nil, fmt.Errorf("Please provide correct contract Id")
+		// return shim.Error("Incorrect number of arguments. Expecting 1")
+	}
 
-	resultsIterator, err := ctx.GetStub().GetQueryResult(queryString)
+	claimBytes, err := ctx.GetStub().GetState(claimId)
+
 	if err != nil {
-		return nil, err
-	}
-	defer resultsIterator.Close()
-
-	results := []Car{}
-
-	for resultsIterator.HasNext() {
-		response, err := resultsIterator.Next()
-		if err != nil {
-			return nil, err
-		}
-
-		newCar := new(Car)
-
-		err = json.Unmarshal(response.Value, newCar)
-		if err != nil {
-			return nil, err
-		}
-
-		results = append(results, *newCar)
-	}
-	return results, nil
-}
-
-func (s *SmartContract) GetDocumentUsingCarContract(ctx contractapi.TransactionContextInterface, documentID string) (string, error) {
-	if len(documentID) == 0 {
-		return "", fmt.Errorf("Please provide correct contract Id")
+		return nil, fmt.Errorf("Failed to read from world state. %s", err.Error())
 	}
 
-	params := []string{"GetDocumentById", documentID}
-	queryArgs := make([][]byte, len(params))
-	for i, arg := range params {
-		queryArgs[i] = []byte(arg)
+	if claimBytes == nil {
+		return nil, fmt.Errorf("%s does not exist", claimId)
 	}
 
-	response := ctx.GetStub().InvokeChaincode("document_cc", queryArgs, "mychannel")
+	claim := new(Claim)
+	_ = json.Unmarshal(claimBytes, claim)
 
-	return string(response.Payload), nil
+	return claim, nil
 
 }
 
-func (s *SmartContract) CreateDocumentUsingCarContract(ctx contractapi.TransactionContextInterface, functionName string, documentData string) (string, error) {
-	if len(documentData) == 0 {
-		return "", fmt.Errorf("Please provide correct document data")
+
+func (s *SmartContract) UpdateClaimStatus(ctx contractapi.TransactionContextInterface, claimID string, status string) (string, error) {
+
+	if len(claimID) == 0 {
+		return "", fmt.Errorf("Please pass the correct car id")
 	}
 
-	params := []string{functionName, documentData}
-	queryArgs := make([][]byte, len(params))
-	for i, arg := range params {
-		queryArgs[i] = []byte(arg)
+	claimBytes, err := ctx.GetStub().GetState(claimID)
+
+	if err != nil {
+		return "", fmt.Errorf("Failed to get car data. %s", err.Error())
 	}
 
-	response := ctx.GetStub().InvokeChaincode("document_cc", queryArgs, "mychannel")
+	if claimBytes == nil {
+		return "", fmt.Errorf("%s does not exist", claimID)
+	}
 
-	return string(response.Payload), nil
+	claim := new(Claim)
+	_ = json.Unmarshal(claimBytes, claim)
+	bool1, _ := strconv.ParseBool(status)
+
+
+	claim.Status = bool1
+
+	claimBytes, err = json.Marshal(claim)
+	if err != nil {
+		return "", fmt.Errorf("Failed while marshling car. %s", err.Error())
+	}
+	id := "claim/"+claim.FHIRID
+
+	//  txId := ctx.GetStub().GetTxID()
+
+	return ctx.GetStub().GetTxID(), ctx.GetStub().PutState(id, claimBytes)
 
 }
+
+
+
+
+
+
 
 func main() {
 

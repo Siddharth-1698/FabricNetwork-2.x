@@ -11,6 +11,7 @@ const jwt = require('jsonwebtoken');
 const bearerToken = require('express-bearer-token');
 const cors = require('cors');
 const constants = require('./config/constants.json')
+const invokeClaim = require('./app/invokeClaim')
 
 const host = process.env.HOST || constants.host;
 const port = process.env.PORT || constants.port;
@@ -217,6 +218,57 @@ app.post('/channels/:channelName/chaincodes/:chaincodeName', async function (req
         }
 
         let message = await invoke.invokeTransaction(channelName, chaincodeName, fcn, args, req.username, req.orgname, transient);
+        console.log(`message result is : ${message}`)
+
+        const response_payload = {
+            result: message,
+            error: null,
+            errorData: null
+        }
+        res.send(response_payload);
+
+    } catch (error) {
+        const response_payload = {
+            result: null,
+            error: error.name,
+            errorData: error.message
+        }
+        res.send(response_payload)
+    }
+});
+// Invoke transaction on chaincode on target peers
+app.post('/channels/:channelName/chaincodes/:chaincodeName/update-claim-status', async function (req, res) {
+    try {
+        logger.debug('==================== INVOKE ON CHAINCODE ==================');
+        var peers = req.body.peers;
+        var chaincodeName = req.params.chaincodeName;
+        var channelName = req.params.channelName;
+        var fcn = req.body.fcn;
+        var args = req.body.args;
+        var transient = req.body.transient;
+        console.log(`Transient data is ;${transient}`)
+        logger.debug('channelName  : ' + channelName);
+        logger.debug('chaincodeName : ' + chaincodeName);
+        logger.debug('fcn  : ' + fcn);
+        logger.debug('args  : ' + args);
+        if (!chaincodeName) {
+            res.json(getErrorMessage('\'chaincodeName\''));
+            return;
+        }
+        if (!channelName) {
+            res.json(getErrorMessage('\'channelName\''));
+            return;
+        }
+        if (!fcn) {
+            res.json(getErrorMessage('\'fcn\''));
+            return;
+        }
+        if (!args) {
+            res.json(getErrorMessage('\'args\''));
+            return;
+        }
+
+        let message = await invokeClaim.invokeClaimTransaction(channelName, chaincodeName, fcn, args, req.username, req.orgname, transient);
         console.log(`message result is : ${message}`)
 
         const response_payload = {
