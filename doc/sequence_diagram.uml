@@ -1,0 +1,29 @@
+@startuml
+!theme plain
+title <font color=black size=15 >Sequence diagram for FHIR + Fabric Project</font> \n \n
+
+participant "Hospital" as Hospital
+
+participant "Insurance Company " as Insurance_company
+participant "Fhir Server " as fhir_server
+participant "Fabric " as Fabric
+
+
+
+alt Patient has not registered
+
+Hospital->fhir_server: Register the patient
+Hospital->fhir_server: Create Claim
+Hospital-> Fabric: claim instance stored in blockchain along with patient id
+Insurance_company->Fabric: Verifies the claim and update status
+else Already registered
+Hospital->fhir_server: Create Claim
+Hospital-> Fabric: claim instance stored in blockchain along with patient id
+Insurance_company->Fabric: Verifies the claim and update status
+
+
+end
+ 
+
+
+@enduml
