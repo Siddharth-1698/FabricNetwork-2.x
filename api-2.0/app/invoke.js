@@ -77,10 +77,10 @@ const invokeTransaction = async (
     // Multiple smartcontract in one chaincode
     let result;
     let message;
-    console.log("I am in helper function, Here is the arguments: ", args[0]);
-    result = await contract.submitTransaction("CreatePatient", args[0]);
-    console.log(result);
-    result = { txid: result.toString() };
+    // console.log("I am in helper function, Here is the arguments: ", args[0]);
+    // result = await contract.submitTransaction("CreatePatient", args[0]);
+    // console.log(result);
+    // result = { txid: result.toString() };
     new_arg =JSON.parse(args[0]) 
     let arg = {
       fhir_id: new_arg.fhir_id,
@@ -93,27 +93,6 @@ const invokeTransaction = async (
     console.log(result);
     result = { txid: result.toString() };
 
-    // switch (fcn) {
-    //     case "CreatePrivateDataImplicitForOrg1":
-    //     case 'ABACTest':
-    //     case 'CreateContract':
-    //     case "CreateCar":
-    //         result = await contract.submitTransaction(fcn, args[0]);
-    //         result = {txid: result.toString()}
-    //         break;
-    //     case "UpdateCarOwner":
-    //         console.log("=============")
-    //         result = await contract.submitTransaction('SmartContract:'+fcn, args[0], args[1]);
-    //         result = {txid: result.toString()}
-    //         break;
-    //     case "CreateDocument":
-    //         result = await contract.submitTransaction('DocumentContract:'+fcn, args[0]);
-    //         console.log(result.toString())
-    //         result = {txid: result.toString()}
-    //         break;
-    //     default:
-    //         break;
-    // }
 
     await gateway.disconnect();
 

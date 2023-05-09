@@ -79,43 +79,16 @@ const {
       let message;
       console.log("I am in helper function, Here is the arguments: ", args[0]);
       new_arg =JSON.parse(args[0]) 
-      let claimId = "claim/"+new_arg.claim_id
+      let claimId = "claim/"+new_arg.fhir_id
+      console.log(claimId,new_arg.status)
 
       result = await contract.submitTransaction("UpdateClaimStatus",claimId,new_arg.status );
       console.log(result);
       result = { txid: result.toString() };
-    //   let arg = {
-    //     fhir_id: new_arg.fhir_id,
-    //     hospital_id:new_arg.hospitals_id,
-    //     patient_id:new_arg.fhir_id,
-    //     insurer_id: new_arg.inssurance_id,
-    //     status:false,
-    //   }
-    //   result = await contract.submitTransaction("CreateClaim", JSON.stringify(arg));
-    //   console.log(result);
+   
       result = { txid: result.toString() };
   
-      // switch (fcn) {
-      //     case "CreatePrivateDataImplicitForOrg1":
-      //     case 'ABACTest':
-      //     case 'CreateContract':
-      //     case "CreateCar":
-      //         result = await contract.submitTransaction(fcn, args[0]);
-      //         result = {txid: result.toString()}
-      //         break;
-      //     case "UpdateCarOwner":
-      //         console.log("=============")
-      //         result = await contract.submitTransaction('SmartContract:'+fcn, args[0], args[1]);
-      //         result = {txid: result.toString()}
-      //         break;
-      //     case "CreateDocument":
-      //         result = await contract.submitTransaction('DocumentContract:'+fcn, args[0]);
-      //         console.log(result.toString())
-      //         result = {txid: result.toString()}
-      //         break;
-      //     default:
-      //         break;
-      // }
+      
   
       await gateway.disconnect();
   
